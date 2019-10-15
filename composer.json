@@ -1,0 +1,18 @@
+{
+    "description": "",
+    "type": "neos-package",
+    "name": "flowpack/fusion-tracing",
+    "require": {
+        "neos/fusion": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Flowpack\\Fusion\\Tracing\\": "Classes/"
+        }
+    },
+    "extra": {
+        "neos": {
+            "package-key": "Flowpack.Fusion.Tracing"
+        }
+    }
+}
