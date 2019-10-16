@@ -16,20 +16,40 @@ class RuntimeTracing
    */
   protected $tracefile = null;
 
+  /**
+   * @var float
+   */
   protected $baseTs = null;
 
+  /**
+   * @var array
+   */
   protected $stackFrames = [];
 
+  /**
+   * @var array
+   */
   protected $stackFramesByPath = [];
 
+  /**
+   * @var int
+   */
   protected $sfCnt = 1;
 
+  /**
+   * @var int
+   */
   protected $evtCnt = 0;
 
   /**
    * @var bool
    */
-  protected $enabled = true;
+  protected $enabled = false;
+
+  /**
+   * @var string
+   */
+  protected $traceName;
 
   /**
    * @Flow\Before("method(Neos\Fusion\Core\Cache\RuntimeContentCache->enter())")
@@ -56,7 +76,7 @@ class RuntimeTracing
     $this->writeEnd();
   }
 
-  private function writeStart(string $fusionPath): void
+  public function writeStart(string $fusionPath, bool $computeStackFrame = true, string $cat = 'evaluate', array $args = []): void
   {
     $name = $fusionPath;
 
@@ -65,28 +85,33 @@ class RuntimeTracing
       $name = substr($fusionPath, $lastSlash + 1);
     }
 
-    $sf = $this->getStackFrame($fusionPath);
+    $sf = null;
+    if ($computeStackFrame) {
+      $sf = $this->getStackFrame($fusionPath);
+    }
 
     $evt = [
       'name' => $name,
-      'cat' => 'Fusion',
+      'cat' => $cat,
       'ph' => 'B',
       'ts' => $this->ts(),
       'pid' => 1,
       'tid' => 1,
-      'sf' => $sf
+      'sf' => $sf,
+      'args' => $args
     ];
 
     $this->appendEvent($evt);
   }
 
-  private function writeEnd(): void
+  public function writeEnd(array $args = []): void
   {
     $evt = [
       'ph' => 'E',
       'ts' => $this->ts(),
       'pid' => 1,
-      'tid' => 1
+      'tid' => 1,
+      'args' => $args
     ];
     $this->appendEvent($evt);
   }
@@ -101,23 +126,23 @@ class RuntimeTracing
     return (microtime(true) * 1000 * 1000) - $this->baseTs;
   }
 
-  private function appendEvent(array $evt): void
+  public function appendEvent(array $evt): void
   {
     if ($this->tracefile === null) {
-      $filename = FLOW_PATH_DATA . 'Logs/Traces/' . time() . '.trace';
+      $filename = FLOW_PATH_DATA . 'Logs/Traces/' . $this->traceName . '-' . time() . '.trace';
 
       $this->tracefile = fopen($filename, 'w');
-      fprintf($this->tracefile, "{\"traceEvents\":[\n");
+      fwrite($this->tracefile, "{\"traceEvents\":[\n");
     }
 
-    fprintf($this->tracefile, ($this->evtCnt > 0 ? ',' : '') . json_encode($evt) . "\n");
+    fwrite($this->tracefile, ($this->evtCnt > 0 ? ',' : '') . json_encode($evt) . "\n");
     $this->evtCnt++;
   }
 
   public function shutdownObject()
   {
     if ($this->tracefile != null) {
-      fprintf($this->tracefile, "],\n\"stackFrames\":" . json_encode($this->stackFrames, JSON_PRETTY_PRINT) . "}\n");
+      fwrite($this->tracefile, "],\n\"stackFrames\":" . json_encode($this->stackFrames, JSON_PRETTY_PRINT) . "}\n");
     }
   }
 
@@ -158,6 +183,12 @@ class RuntimeTracing
   public function getStackFrames(): array
   {
     return $this->stackFrames;
+  }
+
+  public function enable(string $traceName): void
+  {
+    $this->enabled = true;
+    $this->traceName = $traceName;
   }
 
 }
