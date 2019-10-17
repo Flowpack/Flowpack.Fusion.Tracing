@@ -16,8 +16,8 @@ class CheckEnabledComponent implements \Neos\Flow\Http\Component\ComponentInterf
   {
     $request = $componentContext->getHttpRequest();
     $traceNameHeader = $request->getHeader("X-Fusion-Tracing");
-    if ($traceNameHeader !== null) {
-      $this->runtimeTracing->enable($traceNameHeader);
+    if (is_array($traceNameHeader) ? $traceNameHeader !== [] : $traceNameHeader !== null) {
+      $this->runtimeTracing->enable(is_array($traceNameHeader) ? $traceNameHeader[0] : $traceNameHeader);
     }
   }
 }
