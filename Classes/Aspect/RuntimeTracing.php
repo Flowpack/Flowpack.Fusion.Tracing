@@ -1,5 +1,4 @@
 <?php
-
 namespace Flowpack\Fusion\Tracing\Aspect;
 
 use Neos\Flow\Annotations as Flow;
