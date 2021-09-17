@@ -1,8 +1,7 @@
 Neos:
   Flow:
     http:
-      chain:
-        'preprocess':
-          chain:
-            'flowpackFusionTracingCheckEnabled':
-              component: 'Flowpack\Fusion\Tracing\Http\CheckEnabledComponent'
+      middlewares:
+        flowpackFusionTracingCheckEnabled:
+          position: 'start 999'
+          middleware: 'Flowpack\Fusion\Tracing\Http\Middleware\CheckEnabledMiddleware'
