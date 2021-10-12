@@ -26,9 +26,9 @@ class CheckEnabledMiddleware implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $traceNameHeader = $request->getHeader("X-Fusion-Tracing");
-        if (is_array($traceNameHeader) ? $traceNameHeader !== [] : $traceNameHeader !== null) {
-            $this->runtimeTracing->enable(is_array($traceNameHeader) ? $traceNameHeader[0] : $traceNameHeader);
+        $traceNameHeader = $request->getHeaderLine('X-Fusion-Tracing');
+        if (!empty($traceNameHeader)) {
+            $this->runtimeTracing->enable($traceNameHeader);
         }
         return $handler->handle($request);
     }
